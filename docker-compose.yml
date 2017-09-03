@@ -1,0 +1,19 @@
+version: '3'
+
+
+services:
+    rabbitmq:
+        image: rabbitmq:alpine
+    redis:
+        image: redis:alpine
+    syslog-worker:
+        build:
+            context: .
+            dockerfile: Dockerfile_Worker
+        command:
+            - presence
+            - worker
+            - syslog
+        depends_on:
+            - rabbitmq
+            - redis
