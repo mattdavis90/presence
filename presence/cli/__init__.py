@@ -36,7 +36,7 @@ def cli(log_level):
             sys.exit(1)
 
     click.clear()
-    click.secho(__banner__)
+    click.secho(__banner__, bold=True)
 
     ctx = click.get_current_context()
 

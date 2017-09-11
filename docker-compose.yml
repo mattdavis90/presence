@@ -1,19 +1,23 @@
-version: '3'
+version: '2'
 
 
 services:
-    rabbitmq:
-        image: rabbitmq:alpine
-    redis:
-        image: redis:alpine
-    syslog-worker:
-        build:
-            context: .
-            dockerfile: Dockerfile_Worker
+    registry:
+        extends:
+            service: presence
+            file: docker-compose-presence.yml
         command:
             - presence
-            - worker
-            - syslog
+            - run
+            - registry
+
+    test:
+        extends:
+            service: presence
+            file: docker-compose-presence.yml
+        command:
+            - presence
+            - run
+            - test
         depends_on:
-            - rabbitmq
-            - redis
+            - registry

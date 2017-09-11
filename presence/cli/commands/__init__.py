@@ -1,1 +1,1 @@
-import presence.cli.commands.worker
+import presence.cli.commands.run

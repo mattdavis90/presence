@@ -35,11 +35,12 @@ setup(
     author='Matt Davis',
     author_email='mattdavis90@googlemail.com',
     install_requires=(
-        'structlog[dev]',
-        'click-didyoumean',
-        'click-repl',
         'click',
-        'celery',
+        'click-repl',
+        'click-didyoumean',
+        'gevent',
+        'pyzmq',
+        'structlog[dev]',
     ),
     tests_require=(),
     description=(
