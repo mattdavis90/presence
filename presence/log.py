@@ -7,36 +7,38 @@ pre_chain = [
     timestamper,
 ]
 
-logging.config.dictConfig({
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "plain": {
-            "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.dev.ConsoleRenderer(colors=False),
-            "foreign_pre_chain": pre_chain,
+logging.config.dictConfig(
+    {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "plain": {
+                "()": structlog.stdlib.ProcessorFormatter,
+                "processor": structlog.dev.ConsoleRenderer(colors=False),
+                "foreign_pre_chain": pre_chain,
+            },
+            "colored": {
+                "()": structlog.stdlib.ProcessorFormatter,
+                "processor": structlog.dev.ConsoleRenderer(colors=True),
+                "foreign_pre_chain": pre_chain,
+            },
         },
-        "colored": {
-            "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.dev.ConsoleRenderer(colors=True),
-            "foreign_pre_chain": pre_chain,
+        "handlers": {
+            "default": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+                "formatter": "colored",
+            },
         },
-    },
-    "handlers": {
-        "default": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "colored",
-        },
-    },
-    "loggers": {
-        "": {
-            "handlers": ["default"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
+        "loggers": {
+            "": {
+                "handlers": ["default"],
+                "level": "DEBUG",
+                "propagate": True,
+            },
+        }
     }
-})
+)
 
 structlog.configure(
     processors=[

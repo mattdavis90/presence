@@ -28,7 +28,7 @@ def read(fname):
 setup(
     name='presence',
     version=find_version('presence/__init__.py'),
-    packages=find_packages(exclude=('test*',)),
+    packages=find_packages(exclude=('test*', )),
     package_dir={'presence': 'presence'},
     url='https://github.com/mattdavis90/presence',
     license='MIT',
@@ -43,15 +43,13 @@ setup(
         'structlog[dev]',
     ),
     tests_require=(),
-    description=(
-        'Presence detects when a mobile device enters a home network'),
+    description=('Presence detects when a mobile device enters a home network'),
     long_description=read('README.rst'),
-    entry_points = {
-    'console_scripts': [
-            'presence = presence.cli:cli'
-        ]
-    },
-    classifiers=('License :: OSI Approved :: MIT License',
-                 'Programming Language :: Python :: 3.6',
-                 'Programming Language :: Python :: Implementation :: CPython',
-                 'Programming Language :: Python :: Implementation :: PyPy'))
+    entry_points={'console_scripts': ['presence = presence.cli:cli']},
+    classifiers=(
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy'
+    )
+)

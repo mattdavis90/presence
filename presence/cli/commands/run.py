@@ -3,10 +3,10 @@ import structlog
 
 from click_didyoumean import DYMGroup
 
+from presence import config
 from presence.cli import cli
+from presence.rpc import Broker, Client, Worker, ServiceClient
 from presence.tasks.registry import Registry
-from presence.tasks.utils import make_remote, remote_runner
-
 
 log = structlog.getLogger()
 
@@ -17,15 +17,58 @@ def run():
 
 
 @run.command()
+def broker():
+    """Run the broker"""
+    port = config['port']
+    bind = 'tcp://*:{}'.format(port)
+
+    log.info('Broker starting...', bind=bind)
+
+    broker = Broker(bind)
+    broker.start()
+
+
+@run.command()
 def registry():
     """Run the registry"""
-    log.info('Running Registry...')
-    reg = Registry()
-    remote_runner(reg, 'tcp://*:5000')
+    broker = config['broker']
+    port = config['port']
+    connect = 'tcp://{}:{}'.format(broker, port)
+
+    log.info('Running Registry...', connect=connect)
+
+    worker = Worker(connect, Registry())
+    worker.start()
 
 
 @run.command()
 def test():
-    reg = make_remote(Registry, 'tcp://registry:5000')
-    log.info('Result', ans=reg.register('test'))
-    log.info('Result', ans=reg.test())
+    """Test the registry"""
+    broker = config['broker']
+    port = config['port']
+    connect = 'tcp://{}:{}'.format(broker, port)
+
+    log.info('Testing Registry...', connect=connect)
+
+    reg = Client(connect, Registry)
+    from time import time
+    start = time()
+    for _ in range(10000):
+        reg.register('test')
+    end = time()
+    log.info('1000 finished', time=(end - start))
+
+
+@run.command()
+def stats():
+    """Get the broker stats"""
+    from pprint import pprint as pp
+
+    broker = config['broker']
+    port = config['port']
+    connect = 'tcp://{}:{}'.format(broker, port)
+
+    log.info('Getting stats...', connect=connect)
+
+    service_client = ServiceClient(connect)
+    pp(service_client.stats)

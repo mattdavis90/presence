@@ -3,8 +3,8 @@ import sys
 
 import structlog
 
-import presence.log # noqa
-
+import presence.log
+from presence.config import Config
 
 __version__ = '0.1.0'
 __app_name__ = 'presence'
@@ -16,3 +16,5 @@ __banner__ = """\
  | |   | |  ( (/ /|___ ( (/ /| | | ( (__( (/ /
  |_|   |_|   \____|___/ \____)_| |_|\____)____) v{}
 """.format(__version__)
+
+config = Config()

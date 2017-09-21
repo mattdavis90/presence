@@ -1,10 +1,9 @@
 from configparser import ConfigParser
 
 
-class Config(ConfigParser):
-    def to_dict(self):
-        d = dict(self._sections)
-        for k in d:
-            d[k] = dict(self._defaults, **d[k])
-            d[k].pop('__name__', None)
-        return d
+class Config(dict):
+    def read(self, config_file):
+        with open(config_file, 'rb') as f:
+            d = {}
+            exec (compile(f.read(), '<config-file>', 'exec'), d)
+            self.update({k: v for k, v in d.items() if not k.startswith('_')})

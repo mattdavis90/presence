@@ -9,4 +9,6 @@ WORKDIR /code
 
 ADD . /code
 
+VOLUME /config
+
 RUN pip install -e .

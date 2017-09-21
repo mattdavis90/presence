@@ -2,12 +2,23 @@ version: '2'
 
 
 services:
+    broker:
+        extends:
+            service: presence
+            file: docker-compose-presence.yml
+        command:
+            - presence
+            - /config/config.py
+            - run
+            - broker
+
     registry:
         extends:
             service: presence
             file: docker-compose-presence.yml
         command:
             - presence
+            - /config/config.py
             - run
             - registry
 
@@ -17,7 +28,6 @@ services:
             file: docker-compose-presence.yml
         command:
             - presence
+            - /config/config.py
             - run
             - test
-        depends_on:
-            - registry

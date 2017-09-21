@@ -5,7 +5,6 @@ import zmq.green as zmq
 from zmq.green.eventloop.ioloop import IOLoop
 from zmq.green.eventloop.zmqstream import ZMQStream
 
-
 log = structlog.getLogger()
 
 
@@ -18,17 +17,27 @@ def make_remote(cls, remote_host):
             context = zmq.Context()
             self._sock = context.socket(zmq.REQ)
 
-            log.info('{} Connecting to {}'.format(self._wrapped_name, remote_host))
+            log.info(
+                '{} Connecting to {}'.format(self._wrapped_name, remote_host)
+            )
             self._sock.connect(remote_host)
 
         def __getattr__(self, name):
             if not hasattr(self._wrapped, name):
-                raise AttributeError('Remote {} instance has no attribut \'{}\''.format(self._wrapped_name, name))
+                raise AttributeError(
+                    'Remote {} instance has no attribut \'{}\''.
+                    format(self._wrapped_name, name)
+                )
 
             def remote_call(*args, **kwargs):
-                log.info('Calling {} on {} with {} {}'.format(name, self._wrapped_name, args, kwargs))
+                log.info(
+                    'Calling {} on {} with {} {}'.
+                    format(name, self._wrapped_name, args, kwargs)
+                )
 
-                self._sock.send(pickle.dumps((self._wrapped_name, name, args, kwargs)))
+                self._sock.send(
+                    pickle.dumps((self._wrapped_name, name, args, kwargs))
+                )
 
                 retVal = pickle.loads(self._sock.recv())
 
@@ -41,6 +50,7 @@ def make_remote(cls, remote_host):
                 return remote_call
             else:
                 return remote_call()
+
     return Remote()
 
 
@@ -60,12 +70,24 @@ def remote_runner(instance, listen):
 
             (wrapped_name, name, args, kwargs) = pickle.loads(message)
 
-            log.info('Message received', wrapped_name=wrapped_name, name=name, args=args, kwargs=kwargs)
+            log.info(
+                'Message received',
+                wrapped_name=wrapped_name,
+                name=name,
+                args=args,
+                kwargs=kwargs
+            )
 
             if not instance_name == wrapped_name:
-                retVal = NameError('Attempt to call remote function on instance of \'{}\' as \'{}\''.format(instance_name, wrapped_name))
+                retVal = NameError(
+                    'Attempt to call remote function on instance of \'{}\' as \'{}\''.
+                    format(instance_name, wrapped_name)
+                )
             elif not hasattr(instance, name):
-                retVal = AttributeError('Remote {} instance has no attribut \'{}\''.format(instance_name, name))
+                retVal = AttributeError(
+                    'Remote {} instance has no attribut \'{}\''.
+                    format(instance_name, name)
+                )
             else:
                 prop = getattr(instance, name)
 
