@@ -4,14 +4,11 @@ from time import sleep, time
 import structlog
 import zmq.green as zmq
 
-from . import WORKER, READY, HEARTBEAT, REQUEST, REPLY, DISCONNECT
+from .. import config
+from . import DISCONNECT, HEARTBEAT, READY, REPLY, REQUEST, STATS, WORKER
+from .utils import get_usage
 
 log = structlog.getLogger()
-
-_HEARTBEAT_LIVENESS = 3
-_HEARTBEAT_INTERVAL = 2500
-_RECONNECT_INTERVAL = 2500
-_TIMEOUT = 2500
 
 
 class Worker(object):
@@ -20,15 +17,15 @@ class Worker(object):
         self._instance = instance
         self._service = bytes(instance.__class__.__name__, 'utf8')
 
+        self._heartbeat_liveness = config['heartbeat_liveness']
+        self._heartbeat_interval = config['heartbeat_interval']
+        self._reconnect_interval = config['reconnect_interval']
+        self._timeout = config['worker_timeout']
+
         self._liveness = 0
         self._heartbeat_at = 0
         self._expect_reply = False
         self._reply_to = None
-
-        self._heartbeat_liveness = _HEARTBEAT_LIVENESS
-        self._heartbeat_interval = _HEARTBEAT_INTERVAL
-        self._reconnect_interval = _RECONNECT_INTERVAL
-        self._timeout = _TIMEOUT
 
         self._context = zmq.Context()
         self._poller = zmq.Poller()
@@ -158,6 +155,8 @@ class Worker(object):
                     return message
                 elif command == HEARTBEAT:
                     pass
+                elif command == STATS:
+                    self._handle_stats(message)
                 elif command == DISCONNECT:
                     self._connect_to_broker()
                 else:
@@ -181,3 +180,12 @@ class Worker(object):
 
         log.warn('Interrupted')
         return None
+
+    def _handle_stats(self, message):
+        assert len(message) == 1
+
+        client = message.pop(0)
+
+        reply = [client, b'', pickle.dumps(get_usage())]
+
+        self._send_to_broker(REPLY, message=reply)

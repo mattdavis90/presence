@@ -5,6 +5,7 @@ import structlog
 
 import presence.log
 from presence.config import Config
+from presence.default_config import default_config
 
 __version__ = '0.1.0'
 __app_name__ = 'presence'
@@ -17,4 +18,4 @@ __banner__ = """\
  |_|   |_|   \____|___/ \____)_| |_|\____)____) v{}
 """.format(__version__)
 
-config = Config()
+config = Config(default_config)

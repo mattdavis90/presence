@@ -45,7 +45,7 @@ setup(
     tests_require=(),
     description=('Presence detects when a mobile device enters a home network'),
     long_description=read('README.rst'),
-    entry_points={'console_scripts': ['presence = presence.cli:cli']},
+    entry_points={'console_scripts': ['presence = presence.cli:run_cli']},
     classifiers=(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.6',

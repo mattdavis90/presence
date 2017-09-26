@@ -17,7 +17,9 @@ log = structlog.getLogger()
 
 
 @click.group(cls=DYMGroup, invoke_without_command=True)
-@click.argument('config_file', type=click.Path(exists=True))
+@click.option(
+    '--config-file', type=click.Path(exists=True), envvar='CONFIG_FILE'
+)
 @click.option(
     '--log-level',
     default='INFO',
@@ -25,10 +27,11 @@ log = structlog.getLogger()
     callback=handle_log_level,
     help='Either CRITICAL, ERROR, WARNING, INFO or DEBUG'
 )
-def cli(config_file, log_level):
+def cli(log_level, config_file=None):
     logging.getLogger().setLevel(log_level)
 
-    config.read(config_file)
+    if config_file:
+        config.read(config_file)
 
     config_dir = os.path.join(click.get_app_dir(__app_name__))
 
@@ -60,6 +63,10 @@ def cli(config_file, log_level):
             'Presence> ',
         }
         repl(ctx, prompt_kwargs=prompt_kwargs)
+
+
+def run_cli():
+    cli(auto_envvar_prefix='PRESENCE')
 
 
 import presence.cli.commands  # noqa

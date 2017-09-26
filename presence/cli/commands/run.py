@@ -56,7 +56,7 @@ def test():
     for _ in range(10000):
         reg.register('test')
     end = time()
-    log.info('1000 finished', time=(end - start))
+    log.info('10000 finished', time=(end - start))
 
 
 @run.command()
@@ -71,4 +71,10 @@ def stats():
     log.info('Getting stats...', connect=connect)
 
     service_client = ServiceClient(connect)
-    pp(service_client.stats)
+    stats = service_client.stats()
+
+    pp(stats)
+
+    for worker in stats['workers']:
+        print(worker)
+        pp(service_client.worker_stats(worker))

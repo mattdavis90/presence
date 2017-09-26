@@ -3,7 +3,8 @@ import pickle
 import structlog
 import zmq.green as zmq
 
-from . import CLIENT, TimeoutException
+from .. import config
+from . import CLIENT, STATS, WORKER_STATS, TimeoutException
 
 log = structlog.getLogger()
 
@@ -13,13 +14,14 @@ class Client(object):
         self._broker = broker
         self._wrapped_cls = cls
         self._service = bytes(cls.__name__, 'utf8')
+        self._ignore_service = False
+
+        self._retries = config['client_retries']
+        self._timeout = config['client_timeout']
 
         self._context = zmq.Context()
         self._poller = zmq.Poller()
         self._sock = None
-
-        self._retries = 3
-        self._timeout = 2500
 
         self._connect_to_broker()
 
@@ -66,7 +68,7 @@ class Client(object):
                 assert header == CLIENT
 
                 service = message.pop(0)
-                assert service == self._service
+                assert self._ignore_service or service == self._service
 
                 reply = message
                 break
@@ -124,7 +126,25 @@ class ServiceClient(Client):
         super(ServiceClient, self).__init__(broker, type('None'))
 
         self._service = b'icc'
+        self._ignore_service = True
 
-    def __getattr__(self, name):
-        resp = self._send([bytes(name, 'utf8')])
-        return pickle.loads(resp[0])
+    def stats(self):
+        return self._control_service(STATS)
+
+    def worker_stats(self, worker):
+        return self._control_service(WORKER_STATS, worker)
+
+    def _control_service(self, name, args=None):
+        message = [name]
+
+        if args:
+            if not isinstance(args, list):
+                args = [args]
+            message += args
+
+        resp = self._send(message)
+
+        if resp:
+            return pickle.loads(resp[0])
+        else:
+            return None

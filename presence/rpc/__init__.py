@@ -1,10 +1,12 @@
 CLIENT = b'client'
-WORKER = b'worker'
+DISCONNECT = b'disconnect'
+HEARTBEAT = b'heartbeat'
 READY = b'ready'
 REPLY = b'reply'
 REQUEST = b'request'
-DISCONNECT = b'disconnect'
-HEARTBEAT = b'heartbeat'
+STATS = b'stats'
+WORKER = b'worker'
+WORKER_STATS = b'worker_stats'
 
 
 class RPCException(Exception):

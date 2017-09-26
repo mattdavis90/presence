@@ -5,14 +5,11 @@ from time import time
 import structlog
 import zmq.green as zmq
 
-from . import WORKER, CLIENT, HEARTBEAT, READY, REPLY, REQUEST, DISCONNECT
+from .. import config
+from . import CLIENT, DISCONNECT, HEARTBEAT, READY, REPLY, REQUEST, STATS, WORKER, WORKER_STATS
+from .utils import get_usage
 
 log = structlog.getLogger()
-
-_HEARTBEAT_COUNT = 3
-_HEARTBEAT_INTERVAL = 2500
-_HEARTBEAT_EXPIRY = _HEARTBEAT_COUNT * _HEARTBEAT_INTERVAL
-_CONTROL_SERVICE = b'icc'
 
 
 class Worker(object):
@@ -32,10 +29,12 @@ class Service(object):
 
 class Broker(object):
     def __init__(self, bind):
-        self._heartbeat_expiry = _HEARTBEAT_COUNT * _HEARTBEAT_INTERVAL
-        self._heartbeat_at = time() + 1e-3 * _HEARTBEAT_INTERVAL
-        self._heartbeat_interval = _HEARTBEAT_INTERVAL
-        self._control_service = _CONTROL_SERVICE
+        self._heartbeat_count = config['heartbeat_count']
+        self._heartbeat_interval = config['heartbeat_interval']
+        self._control_service = config['control_service']
+
+        self._heartbeat_expiry = self._heartbeat_count * self._heartbeat_interval
+        self._heartbeat_at = time() + 1e-3 * self._heartbeat_interval
 
         self._workers = {}
         self._waiting_workers = []
@@ -143,23 +142,36 @@ class Broker(object):
         command = message.pop(0)
 
         # Command handling should pop params from message
-        # and, send a pickled response in reply
+        # and, send a pickled response in reply... or set
+        # reply to None to ignore message - you must be
+        # sure that something will respond or the client
+        # will timeout
         reply = pickle.dumps(None)
 
-        if command == b'stats':
+        if command == STATS:
             stats = {}
 
-            stats['no_services'] = len(self._services)
-            stats['no_workers'] = len(self._workers)
-            stats['no_waiting_workers'] = len(self._waiting_workers)
+            stats['workers'] = [name for name in self._workers.keys()]
+            stats['waiting_workers'] = [
+                worker.identity for worker in self._waiting_workers
+            ]
             stats['services'] = {}
             for svc in self._services.values():
                 stats['services'][svc.name] = len(svc.requests)
+            stats['usage'] = get_usage()
 
             reply = pickle.dumps(stats)
+        elif command == WORKER_STATS:
+            identity = message.pop(0)
+            worker = self._workers.get(identity)
 
-        message = [client, b'', CLIENT, service, reply]
-        self._sock.send_multipart(message)
+            if worker:
+                self._send_to_worker(worker, STATS, message=client)
+                reply = None
+
+        if reply:
+            message = [client, b'', CLIENT, service, reply]
+            self._sock.send_multipart(message)
 
     def _get_worker(self, address):
         assert address is not None
@@ -189,14 +201,21 @@ class Broker(object):
         self._workers.pop(worker.identity)
 
     def _worker_is_waiting(self, worker):
-        self._waiting_workers.append(worker)
+        if worker not in self._waiting_workers:
+            self._waiting_workers.append(worker)
 
-        worker.service.waiting_workers.append(worker)
+        if worker not in worker.service.waiting_workers:
+            worker.service.waiting_workers.append(worker)
+
         worker.expiry = time() + 1e-3 * self._heartbeat_expiry
 
         self._dispatch(worker.service, None)
 
     def _purge_workers(self):
+        self._waiting_workers = sorted(
+            self._waiting_workers, key=lambda w: w.expiry
+        )
+
         while self._waiting_workers:
             worker = self._waiting_workers[0]
 
