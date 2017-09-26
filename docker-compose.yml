@@ -8,7 +8,6 @@ services:
             file: docker-compose-presence.yml
         command:
             - presence
-            - /config/config.py
             - run
             - broker
 
@@ -18,7 +17,6 @@ services:
             file: docker-compose-presence.yml
         command:
             - presence
-            - /config/config.py
             - run
             - registry
 
@@ -28,6 +26,5 @@ services:
             file: docker-compose-presence.yml
         command:
             - presence
-            - /config/config.py
             - run
             - test

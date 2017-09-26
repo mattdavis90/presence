@@ -40,6 +40,7 @@ setup(
         'click-didyoumean',
         'gevent',
         'pyzmq',
+        'psutil',
         'structlog[dev]',
     ),
     tests_require=(),

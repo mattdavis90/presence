@@ -1,7 +1,8 @@
 FROM python:alpine
 
-RUN apk --no-cache add --virtual build-deps python-dev build-base \
-&& pip install pyzmq gevent
+RUN apk --no-cache add --virtual build-deps python-dev build-base gcc linux-headers
+
+RUN pip install pyzmq gevent psutil
 
 RUN mkdir /code
 

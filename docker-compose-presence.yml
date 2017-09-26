@@ -5,5 +5,7 @@ services:
     presence:
         build:
             context: .
+        environment:
+            - PRESENCE_CONFIG_FILE=/config/config.py
         volumes:
             - ./config/:/config/:ro
