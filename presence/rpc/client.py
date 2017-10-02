@@ -10,10 +10,10 @@ log = structlog.getLogger()
 
 
 class Client(object):
-    def __init__(self, broker, cls):
+    def __init__(self, broker, cls, service_suffix=''):
         self._broker = broker
         self._wrapped_cls = cls
-        self._service = bytes(cls.__name__, 'utf8')
+        self._service = bytes('{}{}'.format(cls.__name__, service_suffix), 'utf8')
         self._ignore_service = False
 
         self._retries = config['client_retries']

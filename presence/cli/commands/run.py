@@ -6,7 +6,7 @@ from click_didyoumean import DYMGroup
 from presence import config
 from presence.cli import cli
 from presence.rpc import Broker, Client, Worker, ServiceClient
-from presence.tasks.registry import Registry
+from presence.tasks.store import Store
 
 log = structlog.getLogger()
 
@@ -29,34 +29,36 @@ def broker():
 
 
 @run.command()
-def registry():
-    """Run the registry"""
+@click.option('-i', '--identifier', default='')
+def store(identifier):
+    """Run the store"""
     broker = config['broker']
     port = config['port']
     connect = 'tcp://{}:{}'.format(broker, port)
 
-    log.info('Running Registry...', connect=connect)
+    log.info('Running Store...', connect=connect)
 
-    worker = Worker(connect, Registry())
+    worker = Worker(connect, Store(), service_suffix=identifier)
     worker.start()
 
 
 @run.command()
-def test():
-    """Test the registry"""
+@click.option('-i', '--identifier', default='')
+def test(identifier):
+    """Test the store"""
     broker = config['broker']
     port = config['port']
     connect = 'tcp://{}:{}'.format(broker, port)
 
-    log.info('Testing Registry...', connect=connect)
+    log.info('Testing Store...', connect=connect)
 
-    reg = Client(connect, Registry)
+    store = Client(connect, Store, service_suffix=identifier)
     from time import time
     start = time()
-    for _ in range(10000):
-        reg.register('test')
+    for _ in range(1000):
+        store.add_dhcp('00:11:22:33:44:55', '192.168.1.1', 'localhost')
     end = time()
-    log.info('10000 finished', time=(end - start))
+    log.info('1000 finished', time=(end - start))
 
 
 @run.command()

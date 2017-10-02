@@ -12,10 +12,10 @@ log = structlog.getLogger()
 
 
 class Worker(object):
-    def __init__(self, broker, instance):
+    def __init__(self, broker, instance, service_suffix=''):
         self._broker = broker
         self._instance = instance
-        self._service = bytes(instance.__class__.__name__, 'utf8')
+        self._service = bytes('{}{}'.format(instance.__class__.__name__, service_suffix), 'utf8')
 
         self._heartbeat_liveness = config['heartbeat_liveness']
         self._heartbeat_interval = config['heartbeat_interval']

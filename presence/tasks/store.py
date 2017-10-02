@@ -3,6 +3,6 @@ import structlog
 log = structlog.getLogger()
 
 
-class Registry(object):
-    def register(self, name):
+class Store(object):
+    def add_dhcp(self, mac, ip, hostname):
         return True
